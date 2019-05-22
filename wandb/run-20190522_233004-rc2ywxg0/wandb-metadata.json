@@ -1,0 +1,24 @@
+{
+    "root": "/Users/igor/src/ml/mss",
+    "git": {
+        "remote": null,
+        "commit": null
+    },
+    "email": null,
+    "startedAt": "2019-05-22T23:30:04.364706",
+    "host": "MacBook-Pro.local",
+    "username": "igor",
+    "os": "Darwin-18.6.0-x86_64-i386-64bit",
+    "python": "3.7.3",
+    "cpu_count": 8,
+    "program": "training/run_experiment.py",
+    "args": [
+        "--save",
+        "{\"dataset\": \"MUSDBDataset\", \"model\": \"MSSModel\", \"network\": \"dnn\", \"train_args\": {\"batch_size\": 256}}"
+    ],
+    "state": "killed",
+    "heartbeatAt": "2019-05-22T23:33:10.591075",
+    "jobType": null,
+    "mode": "dryrun",
+    "exitcode": 255
+}

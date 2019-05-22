@@ -1,0 +1,25 @@
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense (Dense)                (None, 128)               65792     
+_________________________________________________________________
+dense_1 (Dense)              (None, 128)               16512     
+_________________________________________________________________
+dense_2 (Dense)              (None, 513)               66177     
+=================================================================
+Total params: 148,481
+Trainable params: 148,481
+Non-trainable params: 0
+_________________________________________________________________
+Traceback (most recent call last):
+  File "training/run_experiment.py", line 154, in <module>
+    main()
+  File "training/run_experiment.py", line 150, in main
+    run_experiment(experiment_config, args.save, args.gpu, use_wandb=not args.nowandb)
+  File "training/run_experiment.py", line 94, in run_experiment
+    use_wandb=use_wandb
+  File "/Users/igor/src/ml/mss/training/util.py", line 49, in train_model
+    _history = model.fit(dataset=dataset, batch_size=batch_size, epochs=epochs, callbacks=callbacks)
+  File "/Users/igor/src/ml/mss/mss/models/base.py", line 40, in fit
+    self.network.fit(x, y, steps_per_epoch=1000, epochs=epochs, verbose = 1)
+NameError: name 'x' is not defined

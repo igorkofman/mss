@@ -1,0 +1,17 @@
+{
+    "experiment_group": "Sample Experiments",
+    "experiments": [
+        {
+            "dataset": "MUSDBDataset",
+            "model": "mss_model",
+            "network": "dnn",
+            "network_args": {
+                "num_layers": 3,
+                "layer_size": 32
+            },
+            "train_args": {
+                "batch_size": 256
+            }
+        },
+    ]
+}
