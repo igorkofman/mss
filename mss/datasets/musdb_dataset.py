@@ -7,6 +7,7 @@ import musdb
 import numpy as np
 import tensorflow as tf
 from mss.datasets.dataset import _download_raw_dataset, Dataset, _parse_args
+from mss.util import to_channel_tensor, stft
 
 #from boltons.cacheutils import cachedproperty
 #from tensorflow.keras.utils import to_categorical
@@ -49,30 +50,15 @@ class MUSDBDataset(Dataset):
         train_tracks = self.database.load_mus_tracks(subsets=['train'])
         test_tracks = self.database.load_mus_tracks(subsets=['test'])
 
-        def _to_channel_tensor(data, channel):
-            return tf.transpose(tf.convert_to_tensor(data.astype(np.float32)))[channel]
+        train_raw_x = to_channel_tensor(train_tracks[0].audio, 0)
+        train_raw_y = to_channel_tensor(train_tracks[0].stems[0], 0)
+        test_raw_x = to_channel_tensor(test_tracks[0].audio, 0)
+        test_raw_y = to_channel_tensor(test_tracks[0].stems[0], 0)
 
-        train_raw_x = _to_channel_tensor(train_tracks[0].audio, 0)
-        train_raw_y = _to_channel_tensor(train_tracks[0].stems[0], 0)
-        test_raw_x = _to_channel_tensor(test_tracks[0].audio, 0)
-        test_raw_y = _to_channel_tensor(test_tracks[0].stems[0], 0)
-
-        # do STFT
-        frame_length = 1024
-        frame_step = 512
-        fft_length = 1024
-        def _stft(audio):
-            return tf.signal.stft(audio, 
-                   frame_length=frame_length, 
-                   frame_step=frame_step,
-                   fft_length=fft_length)
-        
-        self.x_train = _stft(train_raw_x)
-        self.y_train = _stft(train_raw_y)
-        self.x_test = _stft(test_raw_x)
-        self.y_test = _stft(test_raw_y)
-#        self.input_shape = (int(frame_length/2) + 1,)
-#        self.output_shape = (int(frame_length/2) + 1, )
+        self.x_train = stft(train_raw_x)
+        self.y_train = stft(train_raw_y)
+        self.x_test = stft(test_raw_x)
+        self.y_test = stft(test_raw_y)
 
         self._subsample()
 
