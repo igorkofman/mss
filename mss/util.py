@@ -8,6 +8,7 @@ import os
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
+import functools
 
 frame_length = 1024
 frame_step = 512
@@ -22,9 +23,9 @@ def stft(audio):
                           frame_step=frame_step,
                           fft_length=fft_length)
 
-def istft(stft):
+def istft(data):
     return tf.signal.inverse_stft(
-        stfts=stfts, 
+        stfts=data, 
         frame_length=frame_length,
         frame_step=frame_step,
         # forward_window_fn
