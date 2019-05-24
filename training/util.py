@@ -11,7 +11,7 @@ from wandb.keras import WandbCallback
 
 from mss.datasets.dataset import Dataset
 from mss.models.base import Model
-#from training.gpu_util_sampler import GPUUtilizationSampler
+from training.gpu_util_sampler import GPUUtilizationSampler
 
 
 EARLY_STOPPING = True
@@ -32,9 +32,9 @@ def train_model(
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=3, verbose=1, mode='auto')
         callbacks.append(early_stopping)
 
-#    if GPU_UTIL_SAMPLER and gpu_ind is not None:
-#        gpu_utilization = GPUUtilizationSampler(gpu_ind)
-#        callbacks.append(gpu_utilization)
+    if GPU_UTIL_SAMPLER and gpu_ind is not None:
+        gpu_utilization = GPUUtilizationSampler(gpu_ind)
+        callbacks.append(gpu_utilization)
 
     # Hide lines below until Lab 4
     if use_wandb:
