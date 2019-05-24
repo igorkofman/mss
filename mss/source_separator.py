@@ -24,7 +24,7 @@ class SourceSeparator:
             if (str.endswith(".stem.mp4")):
                 audio, rate = stempeg.read_stems(
                     filename=audio_or_filename,
-                    stem_id=5)
+                    stem_id=0)
             else:
                 audio, self.samplerate = sf.read(audio_or_filename)
         else:
