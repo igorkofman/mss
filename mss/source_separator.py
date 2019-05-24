@@ -7,6 +7,8 @@ from .models import MSSModel
 import mss.util as util
 import argv
 import soundfile as sf
+import stempeg
+import sys
 
 
 class SourceSeparator:
@@ -19,7 +21,12 @@ class SourceSeparator:
     def separate(self, audio_or_filename: Union[np.ndarray, str]) -> Tuple[str, float]:
         """Predict on a single image."""
         if isinstance(audio_or_filename, str):
-            audio, self.samplerate = sf.read(audio_or_filename)
+            if (str.endswith(".stem.mp4")):
+                audio, rate = stempeg.read_stems(
+                    filename=audio_or_filename,
+                    stem_id=5)
+            else:
+                audio, self.samplerate = sf.read(audio_or_filename)
         else:
             audio = audio_or_filename
         return self.model.separate_audio(audio)
@@ -27,7 +34,6 @@ class SourceSeparator:
     def evaluate(self, dataset):
         """Evaluate on a dataset."""
         return self.model.evaluate(dataset.x_test, dataset.y_test)
-
 
 if __name__ == "__main__":
     separator = SourceSeparator()
