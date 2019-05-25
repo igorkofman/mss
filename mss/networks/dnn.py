@@ -18,5 +18,5 @@ def dnn(input_shape: Tuple[int, ...],
     for _ in range(num_layers-1):
         model.add(Dense(layer_size, activation='relu'))
         # model.add(Dropout(dropout_amount))
-    model.add(Dense(num_fft_bins, activation='softmax'))
+    model.add(Dense(num_fft_bins * 2, activation='softmax'))
     return model

@@ -18,12 +18,18 @@ def to_channel_tensor(data, channel):
     return tf.transpose(tf.convert_to_tensor(data.astype(np.float32)))[channel]
 
 def stft(audio):
-    return tf.signal.stft(audio, 
-                          frame_length=frame_length, 
-                          frame_step=frame_step,
-                          fft_length=fft_length)
+    x = tf.signal.stft(audio,
+                       frame_length=frame_length, 
+                       frame_step=frame_step,
+                       fft_length=fft_length)
+    x_real = tf.math.real(x)
+    x_imag = tf.math.imag(x)
+    return tf.reshape(tf.stack(x_real, x_imag, axis=1), [-1])
 
 def istft(data):
+    data = data.astype(np.float64)
+    data = tf.reshape(data, [513, 2]) # check me
+    tf.complex(data[:,0], data[:,1])
     return tf.signal.inverse_stft(
         stfts=data, 
         frame_length=frame_length,

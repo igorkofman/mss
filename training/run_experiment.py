@@ -6,6 +6,7 @@ import importlib
 from typing import Dict
 import os
 
+
 # Hide lines below until Lab 4
 #import wandb
 
@@ -93,6 +94,10 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
         gpu_ind=gpu_ind,
         use_wandb=use_wandb
     )
+
+    if save_weights:
+        model.save_weights()
+
     score = model.evaluate(dataset.x_test, dataset.y_test)
     print(f'Test evaluation: {score}')
 
@@ -100,9 +105,6 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
 #    if use_wandb:
 #        wandb.log({'test_metric': score})
     # Hide lines above until Lab 4
-
-    if save_weights:
-        model.save_weights()
 
 
 def _parse_args():

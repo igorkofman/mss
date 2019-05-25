@@ -43,7 +43,7 @@ class Model:
 #        sequence = DatasetSequence(x, y, batch_size=batch_size)  # Use a small batch size to use less memory
 #        preds = self.network.predict_generator(sequence)
         #return np.mean(np.argmax(preds, -1) == np.argmax(y, -1))
-        preds = self.network.predict(x)
+        preds = self.network.predict(x, batch_size=batch_size)
         return preds 
         
     def loss(self):  # pylint: disable=no-self-use
