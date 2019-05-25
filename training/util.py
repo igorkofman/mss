@@ -15,7 +15,7 @@ from training.gpu_util_sampler import GPUUtilizationSampler
 
 
 EARLY_STOPPING = True
-GPU_UTIL_SAMPLER = True
+GPU_UTIL_SAMPLER = False
 
 
 def train_model(

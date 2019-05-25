@@ -9,14 +9,10 @@ def dnn(input_shape: Tuple[int, ...],
         dropout_amount: float = 0.2,
         num_layers: int = 3) -> Model:
 
-    num_fft_bins = output_shape[0]
-
     model = Sequential()
-
     model.add(Dense(layer_size, input_shape=input_shape, activation='relu'))
-
     for _ in range(num_layers-1):
         model.add(Dense(layer_size, activation='relu'))
         # model.add(Dropout(dropout_amount))
-    model.add(Dense(num_fft_bins * 2, activation='softmax'))
+    model.add(Dense(output_shape[0], activation='softmax'))
     return model

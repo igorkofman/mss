@@ -21,7 +21,7 @@ class SourceSeparator:
     def separate(self, audio_or_filename: Union[np.ndarray, str]) -> Tuple[str, float]:
         """Predict on a single image."""
         if isinstance(audio_or_filename, str):
-+            if (audio_or_filename.endswith(".stem.mp4")):
+            if (audio_or_filename.endswith(".stem.mp4")):
                 audio, rate = stempeg.read_stems(
                     filename=audio_or_filename,
                     stem_id=0)

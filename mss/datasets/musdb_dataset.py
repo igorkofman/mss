@@ -27,8 +27,8 @@ class MUSDBDataset(Dataset):
         self.y_train = None
         self.x_test = None
         self.y_test = None
-        self.input_shape = (513,)
-        self.output_shape = (513,)
+        self.input_shape = (513*2,)
+        self.output_shape = (513*2,)
 
     def _ensure_dataset_exists_locally(self):
         musdb_datadir = self.data_dirname() / 'musdb18'

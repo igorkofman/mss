@@ -10,30 +10,34 @@ import numpy as np
 from tqdm import tqdm
 import functools
 
-frame_length = 1024
-frame_step = 512
-fft_length = 1024
-
+FRAME_LENGTH = 1024
+FRAME_STEP = 512
+FFT_LENGTH = 1024
+NUM_FFT_BINS = int(FRAME_LENGTH/2) + 1
 def to_channel_tensor(data, channel):
     return tf.transpose(tf.convert_to_tensor(data.astype(np.float32)))[channel]
 
 def stft(audio):
     x = tf.signal.stft(audio,
-                       frame_length=frame_length, 
-                       frame_step=frame_step,
-                       fft_length=fft_length)
+                       frame_length=FRAME_LENGTH, 
+                       frame_step=FRAME_STEP,
+                       fft_length=FFT_LENGTH)
     x_real = tf.math.real(x)
     x_imag = tf.math.imag(x)
-    return tf.reshape(tf.stack(x_real, x_imag, axis=1), [-1])
+    stacked = tf.stack([x_real, x_imag], axis=2)
+    shape = stacked.get_shape().as_list()
+    res = tf.reshape(stacked, [shape[0], shape[1]*shape[2]])
+    return res
 
 def istft(data):
+    shape = data.get_shape().as_list()
     data = data.astype(np.float64)
-    data = tf.reshape(data, [513, 2]) # check me
-    tf.complex(data[:,0], data[:,1])
+    data = tf.reshape(data, [shape[0], shape[1]/2, 2]) # check me
+    tf.complex(data[:,:,0], data[:,:,1])
     return tf.signal.inverse_stft(
         stfts=data, 
-        frame_length=frame_length,
-        frame_step=frame_step,
+        frame_length=FRAME_LENGTH,
+        frame_step=FRAME_STEP,
         # forward_window_fn
         window_fn=tf.signal.inverse_stft_window_fn(
             frame_step=frame_step,
