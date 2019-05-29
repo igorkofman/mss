@@ -32,22 +32,23 @@ class Model:
         DIRNAME.mkdir(parents=True, exist_ok=True)
         return str(DIRNAME / f'{self.name}_weights.h5')
 
-    def fit(self, dataset, batch_size: int = 32, epochs: int = 10, augment_val: bool = True, callbacks: list = None):
+    def fit(self, dataset, batch_size: int = 32, epochs: int = 20, augment_val: bool = True, callbacks: list = None):
         if callbacks is None:
             callbacks = []
 
         self.network.compile(loss=self.loss(), optimizer=self.optimizer(), metrics=self.metrics())
-        self.network.fit(dataset.x_train, dataset.y_train, steps_per_epoch=1000, epochs=epochs, verbose = 1)
+        self.network.fit(dataset.x_train, dataset.x_train, steps_per_epoch=100,  epochs=30, verbose = 1)
 
     def evaluate(self, x, y, batch_size=16, verbose=False):  # pylint: disable=unused-argument
 #        sequence = DatasetSequence(x, y, batch_size=batch_size)  # Use a small batch size to use less memory
 #        preds = self.network.predict_generator(sequence)
         #return np.mean(np.argmax(preds, -1) == np.argmax(y, -1))
-        preds = self.network.predict(x, batch_size=batch_size)
-        return preds 
+        #preds = self.network.predict(x, batch_size=100)
+        #kreturn preds 
+        return self.network.evaluate(x, x, steps=10)
         
     def loss(self):  # pylint: disable=no-self-use
-        return 'kullback_leibler_divergence'
+        return 'mean_squared_error' #'kullback_leibler_divergence'
 
     def optimizer(self):  # pylint: disable=no-self-use
         return Adam()

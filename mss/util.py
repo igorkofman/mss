@@ -24,17 +24,19 @@ def stft(audio):
                        fft_length=FFT_LENGTH)
     x_real = tf.math.real(x)
     x_imag = tf.math.imag(x)
-    stacked = tf.stack([x_real, x_imag], axis=2)
-    shape = stacked.get_shape().as_list()
-    res = tf.reshape(stacked, [shape[0], shape[1]*shape[2]])
+#    stacked = tf.stack([x_real, x_imag])
+   
+#    shape = stacked.get_shape().as_list()
+#    res = tf.reshape(stacked, [shape[0], shape[1]*shape[2]])
+    res = tf.concat([x_real, x_imag], axis=1)
     return res
 
 def istft(data):
     sess = tf.Session()
     data = tf.convert_to_tensor(data)
     shape = data.get_shape().as_list()
-    data = tf.reshape(data, [shape[0], int(shape[1]/2), 2]) # check me
-    data = tf.complex(data[:,:,0], data[:,:,1])
+#    data = tf.reshape(data, [shape[0], int(shape[1]/2), 2]) # check me
+    data = tf.complex(data[:,0:513], data[:,:,513:])
     res = tf.signal.inverse_stft(
         stfts=data, 
         frame_length=FRAME_LENGTH,
