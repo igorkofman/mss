@@ -9,7 +9,7 @@ import sys
 import soundfile as sf
 import stempeg
 import sys
-
+import tensorflow as tf
 
 class SourceSeparator:
     """Given an audio file, separates it"""
@@ -22,7 +22,7 @@ class SourceSeparator:
         """Predict on a single image."""
         if isinstance(audio_or_filename, str):
             if (audio_or_filename.endswith(".stem.mp4")):
-                audio, rate = stempeg.read_stems(
+                audio, self.samplerate = stempeg.read_stems(
                     filename=audio_or_filename,
                     stem_id=0)
             else:
@@ -36,6 +36,7 @@ class SourceSeparator:
         return self.model.evaluate(dataset.x_test, dataset.y_test)
 
 if __name__ == "__main__":
+
     separator = SourceSeparator()
     audio = separator.separate(sys.argv[1])
     sf.write(sys.argv[2], audio, separator.samplerate)

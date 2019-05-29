@@ -30,20 +30,22 @@ def stft(audio):
     return res
 
 def istft(data):
+    sess = tf.Session()
+    data = tf.convert_to_tensor(data)
     shape = data.get_shape().as_list()
-    data = data.astype(np.float64)
-    data = tf.reshape(data, [shape[0], shape[1]/2, 2]) # check me
-    tf.complex(data[:,:,0], data[:,:,1])
-    return tf.signal.inverse_stft(
+    data = tf.reshape(data, [shape[0], int(shape[1]/2), 2]) # check me
+    data = tf.complex(data[:,:,0], data[:,:,1])
+    res = tf.signal.inverse_stft(
         stfts=data, 
         frame_length=FRAME_LENGTH,
         frame_step=FRAME_STEP,
         # forward_window_fn
         window_fn=tf.signal.inverse_stft_window_fn(
-            frame_step=frame_step,
+            frame_step=FRAME_STEP,
             forward_window_fn=functools.partial(tf.signal.hann_window, periodic=True)
         )
     )
+    return sess.run(res)
 
 def compute_sha256(filename: Union[Path, str]):
     """Return SHA256 checksum of a file."""
