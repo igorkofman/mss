@@ -4,20 +4,14 @@ MUSDB dataset. Downloads from MUSDB website and saves as .npz file if not alread
 import os
 import zipfile
 import musdb
-import numpy as np
-import tensorflow as tf
 from mss.datasets.dataset import _download_raw_dataset, Dataset, _parse_args
 from mss.util import to_channel_tensor, stft
 
-#from boltons.cacheutils import cachedproperty
-#from tensorflow.keras.utils import to_categorical
-#import h5py
-#import numpy as np
-#import toml
+NUM_FFT_BINS = 513
 
 class MUSDBDataset(Dataset):
     """
-    Blah!
+    Tunes!
     """
     def __init__(self, subsample_fraction: float = None):
         self._ensure_dataset_exists_locally()
@@ -27,8 +21,8 @@ class MUSDBDataset(Dataset):
         self.y_train = None
         self.x_test = None
         self.y_test = None
-        self.input_shape = (513*2,)
-        self.output_shape = (513*2,)
+        self.input_shape = (NUM_FFT_BINS*2,)
+        self.output_shape = (NUM_FFT_BINS*2,)
 
     def _ensure_dataset_exists_locally(self):
         musdb_datadir = self.data_dirname() / 'musdb18'
@@ -50,6 +44,7 @@ class MUSDBDataset(Dataset):
         train_tracks = self.database.load_mus_tracks(subsets=['train'])
         test_tracks = self.database.load_mus_tracks(subsets=['test'])
 
+        # grab just the first track for now
         train_raw_x = to_channel_tensor(train_tracks[0].audio, 0)
         train_raw_y = to_channel_tensor(train_tracks[0].stems[0], 0)
         test_raw_x = to_channel_tensor(test_tracks[0].audio, 0)
@@ -60,7 +55,7 @@ class MUSDBDataset(Dataset):
         self.x_test = stft(test_raw_x)
         self.y_test = stft(test_raw_y)
 
-        self._subsample()
+        #self._subsample()
 
     def _subsample(self):
         """Only this fraction of data will be loaded."""

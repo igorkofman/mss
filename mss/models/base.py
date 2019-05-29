@@ -3,10 +3,6 @@ from pathlib import Path
 from typing import Callable, Dict, Optional
 
 from tensorflow.keras.optimizers import Adam
-import numpy as np
-
-#from mss.datasets.dataset_sequence import DatasetSequence
-
 
 DIRNAME = Path(__file__).parents[1].resolve() / 'weights'
 
@@ -32,19 +28,15 @@ class Model:
         DIRNAME.mkdir(parents=True, exist_ok=True)
         return str(DIRNAME / f'{self.name}_weights.h5')
 
-    def fit(self, dataset, batch_size: int = 32, epochs: int = 20, augment_val: bool = True, callbacks: list = None):
+    def fit(self, dataset, steps_per_epoch: int = 100, epochs: int = 16, augment_val: bool = True,
+            callbacks: list = None):
         if callbacks is None:
             callbacks = []
 
         self.network.compile(loss=self.loss(), optimizer=self.optimizer(), metrics=self.metrics())
-        self.network.fit(dataset.x_train, dataset.x_train, steps_per_epoch=100,  epochs=30, verbose = 1)
+        self.network.fit(dataset.x_train, dataset.x_train, steps_per_epoch=steps_per_epoch, epochs=epochs, verbose=1)
 
-    def evaluate(self, x, y, batch_size=16, verbose=False):  # pylint: disable=unused-argument
-#        sequence = DatasetSequence(x, y, batch_size=batch_size)  # Use a small batch size to use less memory
-#        preds = self.network.predict_generator(sequence)
-        #return np.mean(np.argmax(preds, -1) == np.argmax(y, -1))
-        #preds = self.network.predict(x, batch_size=100)
-        #kreturn preds 
+    def evaluate(self, x, y, steps=100, verbose=False):  # pylint: disable=unused-argument
         return self.network.evaluate(x, x, steps=10)
         
     def loss(self):  # pylint: disable=no-self-use
@@ -54,36 +46,10 @@ class Model:
         return Adam()
 
     def metrics(self):  # pylint: disable=no-self-use
-        return ['accuracy']
+        return []
 
     def load_weights(self):
         self.network.load_weights(self.weights_filename)
 
     def save_weights(self):
         self.network.save_weights(self.weights_filename)
-
-'''        train_sequence = DatasetSequence(
-            dataset.x_train,
-            dataset.y_train,
-            batch_size,
-            augment_fn=self.batch_augment_fn,
-            format_fn=self.batch_format_fn
-        )
-        test_sequence = DatasetSequence(
-            dataset.x_test,
-            dataset.y_test,
-            batch_size,
-            augment_fn=self.batch_augment_fn if augment_val else None,
-            format_fn=self.batch_format_fn
-        )
-
-        self.network.fit_generator(
-            generator=train_sequence,
-            epochs=epochs,
-            callbacks=callbacks,
-            validation_data=test_sequence,
-            use_multiprocessing=True,
-            workers=2,
-            shuffle=False
-        )
-'''

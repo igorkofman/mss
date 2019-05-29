@@ -22,7 +22,7 @@ def train_model(
         model: Model,
         dataset: Dataset,
         epochs: int,
-        batch_size: int,
+        steps_per_epoch: int,
         gpu_ind: Optional[int] = None,
         use_wandb: bool = False) -> Model:
     """Train model."""
@@ -46,7 +46,7 @@ def train_model(
     model.network.summary()
 
     t = time()
-    _history = model.fit(dataset=dataset, batch_size=batch_size, epochs=epochs, callbacks=callbacks)
+    _history = model.fit(dataset=dataset, steps_per_epoch=steps_per_epoch, epochs=epochs, callbacks=callbacks)
     print('Training took {:2f} s'.format(time() - t))
 
     if GPU_UTIL_SAMPLER and gpu_ind is not None:

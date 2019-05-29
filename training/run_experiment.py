@@ -16,7 +16,7 @@ from training.util import train_model
 
 
 DEFAULT_TRAIN_ARGS = {
-    'batch_size': 64,
+    'steps_per_epoch': 100,
     'epochs': 16
 }
 
@@ -90,7 +90,7 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
         model,
         dataset,
         epochs=experiment_config['train_args']['epochs'],
-        batch_size=experiment_config['train_args']['batch_size'],
+        steps_per_epoch=experiment_config['train_args']['steps_per_epoch'],
         gpu_ind=gpu_ind,
         use_wandb=use_wandb
     )

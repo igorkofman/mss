@@ -4,18 +4,20 @@ from pathlib import Path
 from typing import Union
 from urllib.request import urlopen, urlretrieve
 import hashlib
-import os
+import functools
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
-import functools
 
 FRAME_LENGTH = 1024
 FRAME_STEP = 512
 FFT_LENGTH = 1024
 NUM_FFT_BINS = int(FRAME_LENGTH/2) + 1
+
 def to_channel_tensor(data, channel):
-    return tf.transpose(tf.convert_to_tensor(data.astype(np.float32)))[channel]
+    # convert to float32 because that's what the stft wants
+    # data is (timestamp, channel)
+    return tf.convert_to_tensor(data.astype(np.float32))[:, channel]
 
 def stft(audio):
     x = tf.signal.stft(audio,
@@ -24,10 +26,6 @@ def stft(audio):
                        fft_length=FFT_LENGTH)
     x_real = tf.math.real(x)
     x_imag = tf.math.imag(x)
-#    stacked = tf.stack([x_real, x_imag])
-   
-#    shape = stacked.get_shape().as_list()
-#    res = tf.reshape(stacked, [shape[0], shape[1]*shape[2]])
     res = tf.concat([x_real, x_imag], axis=1)
     return res
 
@@ -35,8 +33,7 @@ def istft(data):
     sess = tf.Session()
     data = tf.convert_to_tensor(data)
     shape = data.get_shape().as_list()
-#    data = tf.reshape(data, [shape[0], int(shape[1]/2), 2]) # check me
-    data = tf.complex(data[:,0:513], data[:,:,513:])
+    data = tf.complex(data[:, :int(shape[1] / 2)], data[:, int (shape[1] / 2):])
     res = tf.signal.inverse_stft(
         stfts=data, 
         frame_length=FRAME_LENGTH,
