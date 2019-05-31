@@ -5,7 +5,7 @@ import json
 import importlib
 from typing import Dict
 import os
-
+import tensorflow as tf
 
 # Hide lines below until Lab 4
 #import wandb
@@ -54,7 +54,8 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
         sync training run to wandb
     """
     print(f'Running experiment with config {experiment_config} on GPU {gpu_ind}')
-
+    tf.enable_eager_execution()
+    
     datasets_module = importlib.import_module('mss.datasets')
     dataset_class_ = getattr(datasets_module, experiment_config['dataset'])
     dataset_args = experiment_config.get('dataset_args', {})

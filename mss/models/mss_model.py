@@ -21,6 +21,7 @@ class MSSModel(Model):
     def separate_audio(self, audio):
         x = stft(to_channel_tensor(audio, 0))
         pred_raw = self.network.predict(x, steps=100, verbose=1)
+        print (pred_raw)
         separated_audio = istft(pred_raw)
         return separated_audio
     
