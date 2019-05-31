@@ -34,10 +34,10 @@ class Model:
             callbacks = []
 
         self.network.compile(loss=self.loss(), optimizer=self.optimizer(), metrics=self.metrics())
-        self.network.fit(dataset.x_train, dataset.x_train, steps_per_epoch=steps_per_epoch, epochs=epochs, verbose=1)
+        self.network.fit(dataset.x_train, dataset.y_train, steps_per_epoch=100, epochs=epochs, verbose=1)
 
     def evaluate(self, x, y, steps=100, verbose=False):  # pylint: disable=unused-argument
-        return self.network.evaluate(x, x, steps=10)
+        return self.network.evaluate(x, y, steps=10)
         
     def loss(self):  # pylint: disable=no-self-use
         return 'mean_squared_error' #'kullback_leibler_divergence'

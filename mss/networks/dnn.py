@@ -14,5 +14,5 @@ def dnn(input_shape: Tuple[int, ...],
     for _ in range(num_layers-1):
         model.add(Dense(layer_size, activation='relu'))
         # model.add(Dropout(dropout_amount))
-    model.add(Dense(output_shape[0], activation='relu'))
+    model.add(Dense(output_shape[0], activation=None))
     return model
