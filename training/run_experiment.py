@@ -16,7 +16,7 @@ from training.util import train_model
 
 
 DEFAULT_TRAIN_ARGS = {
-    'steps_per_epoch': 100,
+    'batch_size': 100,
     'epochs': 16
 }
 
@@ -55,10 +55,10 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
     """
     print(f'Running experiment with config {experiment_config} on GPU {gpu_ind}')
     tf.enable_eager_execution()
-    
+
     datasets_module = importlib.import_module('mss.datasets')
     dataset_class_ = getattr(datasets_module, experiment_config['dataset'])
-    dataset_args = experiment_config.get('dataset_args', {})
+    dataset_args = experiment_config.get('dataset_args', {'batch_size' : 100})
     dataset = dataset_class_(**dataset_args)
     dataset.load_or_generate_data()
     print(dataset)
@@ -91,7 +91,7 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
         model,
         dataset,
         epochs=experiment_config['train_args']['epochs'],
-        steps_per_epoch=experiment_config['train_args']['steps_per_epoch'],
+        steps_per_epoch=experiment_config['train_args']['batch_size'],
         gpu_ind=gpu_ind,
         use_wandb=use_wandb
     )

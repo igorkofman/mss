@@ -6,14 +6,17 @@ import zipfile
 import musdb
 from mss.datasets.dataset import _download_raw_dataset, Dataset, _parse_args
 from mss.util import to_channel_tensor, stft
+import tensorflow as tf
+from tensorflow.python.keras.utils.data_utils import Sequence
+
 
 NUM_FFT_BINS = 513
 
-class MUSDBDataset(Dataset):
+class MUSDBDataset(Dataset, Sequence):
     """
     Tunes!
     """
-    def __init__(self, subsample_fraction: float = None):
+    def __init__(self, batch_size: int=32, subsample_fraction: float = None):
         self._ensure_dataset_exists_locally()
         self.database = musdb.DB(self.data_dirname() / 'musdb18')
         self.subsample_fraction = subsample_fraction
@@ -21,8 +24,30 @@ class MUSDBDataset(Dataset):
         self.y_train = None
         self.x_test = None
         self.y_test = None
-        self.input_shape = (NUM_FFT_BINS*2,)
+
+        self.batch_size = batch_size
+        self.num_samples = 0
+        self.input_shape = (NUM_FFT_BINS*2*3,)
         self.output_shape = (NUM_FFT_BINS*2,)
+
+    def __len__(self):
+        return int(self.num_samples / self.batch_size)
+
+    def __getitem__(self, iter_index):
+        print("Iter index is:" + str(iter_index))
+        # todo: vectorize
+        batch_start = iter_index * self.batch_size
+        batch_end = min((iter_index + 1) * self.batch_size, self.num_samples)
+        x_batch = self.x_train[batch_start:batch_end]
+        y_batch = self.y_train[batch_start+1:batch_end-1]
+
+        out = []
+        for i in range(1, self.batch_size-1):
+            item = tf.concat([x_batch[i-1:i, :], x_batch[i:i+1, :], x_batch[i+1:i+2, :]], axis=1)
+            out.append(item)
+        x_with_context = tf.concat(out, axis=0)
+        print(x_with_context)
+        return (x_with_context, y_batch)
 
     def _ensure_dataset_exists_locally(self):
         musdb_datadir = self.data_dirname() / 'musdb18'
@@ -54,6 +79,8 @@ class MUSDBDataset(Dataset):
         self.y_train = stft(train_raw_y)
         self.x_test = stft(test_raw_x)
         self.y_test = stft(test_raw_y)
+        self.num_samples = int(self.x_train.shape[0]) 
+        print (self.num_samples)
 
         #self._subsample()
 

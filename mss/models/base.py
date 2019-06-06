@@ -34,7 +34,9 @@ class Model:
             callbacks = []
 
         self.network.compile(loss=self.loss(), optimizer=self.optimizer(), metrics=self.metrics())
-        self.network.fit(dataset.x_train, dataset.y_train, steps_per_epoch=100, epochs=epochs, verbose=1)
+        #self.network.fit(dataset.x_train, dataset.y_train, steps_per_epoch=100, epochs=epochs, verbose=1)
+        self.network.fit_generator(dataset, steps_per_epoch=dataset.num_samples/dataset.batch_size, 
+                                    epochs=epochs, verbose=1)
 
     def evaluate(self, x, y, steps=100, verbose=False):  # pylint: disable=unused-argument
         return self.network.evaluate(x, y, steps=10)
