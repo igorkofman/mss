@@ -28,24 +28,25 @@ class Model:
         DIRNAME.mkdir(parents=True, exist_ok=True)
         return str(DIRNAME / f'{self.name}_weights.h5')
 
-    def fit(self, dataset, steps_per_epoch: int = 100, epochs: int = 16, augment_val: bool = True,
+    def fit(self, dataset, batch_size: int = 100, epochs: int = 16, augment_val: bool = True,
             callbacks: list = None):
         if callbacks is None:
             callbacks = []
 
         self.network.compile(loss=self.loss(), optimizer=self.optimizer(), metrics=self.metrics())
         #self.network.fit(dataset.x_train, dataset.y_train, steps_per_epoch=100, epochs=epochs, verbose=1)
-        self.network.fit_generator(dataset, steps_per_epoch=dataset.num_samples/dataset.batch_size, 
+        self.network.fit_generator(dataset, steps_per_epoch=dataset.num_samples/batch_size,
                                     epochs=epochs, verbose=1)
 
     def evaluate(self, x, y, steps=100, verbose=False):  # pylint: disable=unused-argument
-        return self.network.evaluate(x, y, steps=10)
+        pass
+#        return self.network.evaluate_generator(dataset, steps=10)
         
     def loss(self):  # pylint: disable=no-self-use
         return 'mean_squared_error' #'kullback_leibler_divergence'
 
     def optimizer(self):  # pylint: disable=no-self-use
-        return Adam()
+        return Adam(lr=0.0001)
 
     def metrics(self):  # pylint: disable=no-self-use
         return []

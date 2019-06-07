@@ -34,7 +34,6 @@ class MUSDBDataset(Dataset, Sequence):
         return int(self.num_samples / self.batch_size)
 
     def __getitem__(self, iter_index):
-        print("Iter index is:" + str(iter_index))
         # todo: vectorize
         batch_start = iter_index * self.batch_size
         batch_end = min((iter_index + 1) * self.batch_size, self.num_samples)
@@ -46,7 +45,6 @@ class MUSDBDataset(Dataset, Sequence):
             item = tf.concat([x_batch[i-1:i, :], x_batch[i:i+1, :], x_batch[i+1:i+2, :]], axis=1)
             out.append(item)
         x_with_context = tf.concat(out, axis=0)
-        print(x_with_context)
         return (x_with_context, y_batch)
 
     def _ensure_dataset_exists_locally(self):
@@ -80,7 +78,6 @@ class MUSDBDataset(Dataset, Sequence):
         self.x_test = stft(test_raw_x)
         self.y_test = stft(test_raw_y)
         self.num_samples = int(self.x_train.shape[0]) 
-        print (self.num_samples)
 
         #self._subsample()
 
