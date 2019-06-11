@@ -20,7 +20,8 @@ class Model:
         self.network = network_fn(self.data.input_shape, self.data.output_shape, **network_args)
         self.network.summary()
 
-        self.learning_rate = train_args['learning_rate']
+        if train_args is not None:
+            self.learning_rate = train_args['learning_rate']
 
         self.batch_augment_fn: Optional[Callable] = None
         self.batch_format_fn: Optional[Callable] = None
@@ -48,7 +49,10 @@ class Model:
         return 'mean_squared_error' #'kullback_leibler_divergence'
 
     def optimizer(self):  # pylint: disable=no-self-use
-        return Adam(lr=self.learning_rate)
+        if self.learning_rate:
+            return Adam(lr=self.learning_rate)
+        else;
+            return Adam()
 
     def metrics(self):  # pylint: disable=no-self-use
         return []
