@@ -51,7 +51,7 @@ class Model:
     def optimizer(self):  # pylint: disable=no-self-use
         if self.learning_rate:
             return Adam(lr=self.learning_rate)
-        else;
+        else:
             return Adam()
 
     def metrics(self):  # pylint: disable=no-self-use
