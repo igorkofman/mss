@@ -46,7 +46,7 @@ class Model:
         return 'mean_squared_error' #'kullback_leibler_divergence'
 
     def optimizer(self):  # pylint: disable=no-self-use
-        return Adam(lr=0.0001)
+        return Adam()
 
     def metrics(self):  # pylint: disable=no-self-use
         return []

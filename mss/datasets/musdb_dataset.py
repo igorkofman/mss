@@ -4,46 +4,48 @@ MUSDB dataset. Downloads from MUSDB website and saves as .npz file if not alread
 import os
 import zipfile
 import musdb
-from mss.datasets.dataset import _download_raw_dataset, Dataset, _parse_args
-from mss.util import to_channel_tensor, stft
 import tensorflow as tf
 from tensorflow.python.keras.utils.data_utils import Sequence
 
-
-NUM_FFT_BINS = 513
+from mss.datasets.dataset import _download_raw_dataset, Dataset, _parse_args
+from mss.util import to_channel_tensor, stft
 
 class MUSDBDataset(Dataset, Sequence):
     """
     Tunes!
     """
-    def __init__(self, batch_size: int=32, subsample_fraction: float = None):
+    def __init__(self, batch_size, num_fft_bins=513, num_leading_ctx_frames=1, num_trailing_ctx_frames=1):
         self._ensure_dataset_exists_locally()
         self.database = musdb.DB(self.data_dirname() / 'musdb18')
-        self.subsample_fraction = subsample_fraction
         self.x_train = None
         self.y_train = None
         self.x_test = None
         self.y_test = None
-
         self.batch_size = batch_size
         self.num_samples = 0
-        self.input_shape = (NUM_FFT_BINS*2*3,)
-        self.output_shape = (NUM_FFT_BINS*2,)
+        self.num_fft_bins = num_fft_bins
+        self.num_leading_ctx_frames = num_leading_ctx_frames
+        self.num_trailing_ctx_frames = num_trailing_ctx_frames
+        self.num_ctx_frames = num_leading_ctx_frames + num_trailing_ctx_frames
+        self.input_shape = (self.num_fft_bins * 2 * (self.num_ctx_frames),)
+        self.output_shape = (self.num_fft_bins * 2,)
 
     def __len__(self):
         return int(self.num_samples / self.batch_size)
 
     def __getitem__(self, iter_index):
         # todo: vectorize
-        batch_start = iter_index * self.batch_size
-        batch_end = min((iter_index + 1) * self.batch_size, self.num_samples)
-        x_batch = self.x_train[batch_start:batch_end]
-        y_batch = self.y_train[batch_start+1:batch_end-1]
+        batch_start = iter_index * self.batch_size + self.num_leading_ctx_frames
+        batch_end = min((iter_index + 1) * self.batch_size, 
+                self.num_samples - self.num_trailing_ctx_frames) + \
+                self.num_leading_ctx_frames
+        y_batch = self.y_train[batch_start:batch_end]
 
         out = []
-        for i in range(1, self.batch_size-1):
-            item = tf.concat([x_batch[i-1:i, :], x_batch[i:i+1, :], x_batch[i+1:i+2, :]], axis=1)
-            out.append(item)
+        for i in range(batch_start, batch_end):
+            row = self.x_train[i:i+self.num_ctx_frames, :]
+            row = tf.reshape(row, [1, self.num_fft_bins * 2 * self.num_ctx_frames])
+            out.append(row)
         x_with_context = tf.concat(out, axis=0)
         return (x_with_context, y_batch)
 
@@ -68,29 +70,21 @@ class MUSDBDataset(Dataset, Sequence):
         test_tracks = self.database.load_mus_tracks(subsets=['test'])
 
         # grab just the first track for now
+        # later we'll want to computer the length of all tracks and do ffts on the fly
         train_raw_x = to_channel_tensor(train_tracks[0].audio, 0)
         train_raw_y = to_channel_tensor(train_tracks[0].stems[0], 0)
         test_raw_x = to_channel_tensor(test_tracks[0].audio, 0)
         test_raw_y = to_channel_tensor(test_tracks[0].stems[0], 0)
 
-        self.x_train = stft(train_raw_x)
-        self.y_train = stft(train_raw_y)
-        self.x_test = stft(test_raw_x)
-        self.y_test = stft(test_raw_y)
-        self.num_samples = int(self.x_train.shape[0]) 
-
-        #self._subsample()
-
-    def _subsample(self):
-        """Only this fraction of data will be loaded."""
-        if self.subsample_fraction is None:
-            return
-        num_train = int(self.x_train.shape[0] * self.subsample_fraction)
-        num_test = int(self.x_test.shape[0] * self.subsample_fraction)
-        self.x_train = self.x_train[:num_train]
-        self.y_train = self.y_train[:num_train]
-        self.x_test = self.x_test[:num_test]
-        self.y_test = self.y_test[:num_test]
+        paddings = tf.constant([[self.num_leading_ctx_frames, self.num_trailing_ctx_frames,], [0, 0]])
+        def _pad(t):
+            return tf.pad(t, paddings, 'CONSTANT')
+                
+        self.x_train = _pad(stft(train_raw_x))
+        self.y_train = _pad(stft(train_raw_y))
+        self.x_test = _pad(stft(test_raw_x))
+        self.y_test = _pad(stft(test_raw_y))
+        self.num_samples = int(self.x_train.shape[0])
 
     def __repr__(self):
         return ('MUSDB Dataset\n')
