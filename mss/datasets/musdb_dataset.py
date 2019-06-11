@@ -26,8 +26,8 @@ class MUSDBDataset(Dataset, Sequence):
         self.num_fft_bins = num_fft_bins
         self.num_leading_ctx_frames = num_leading_ctx_frames
         self.num_trailing_ctx_frames = num_trailing_ctx_frames
-        self.num_ctx_frames = num_leading_ctx_frames + num_trailing_ctx_frames
-        self.input_shape = (self.num_fft_bins * 2 * (self.num_ctx_frames),)
+        self.frame_len_with_context = num_leading_ctx_frames + num_trailing_ctx_frames + 1
+        self.input_shape = (self.num_fft_bins * 2 * self.frame_len_with_context,)
         self.output_shape = (self.num_fft_bins * 2,)
 
     def __len__(self):
@@ -43,8 +43,8 @@ class MUSDBDataset(Dataset, Sequence):
 
         out = []
         for i in range(batch_start, batch_end):
-            row = self.x_train[i:i+self.num_ctx_frames, :]
-            row = tf.reshape(row, [1, self.num_fft_bins * 2 * self.num_ctx_frames])
+            row = self.x_train[i:i+self.frame_len_with_context, :]
+            row = tf.reshape(row, [1, self.num_fft_bins * 2 * self.frame_len_with_context])
             out.append(row)
         x_with_context = tf.concat(out, axis=0)
         return (x_with_context, y_batch)
