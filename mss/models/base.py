@@ -8,7 +8,7 @@ DIRNAME = Path(__file__).parents[1].resolve() / 'weights'
 
 class Model:
     """Base class, to be subclassed by predictors for specific type of data."""
-    def __init__(self, dataset_cls: type, network_fn: Callable, dataset_args: Dict = None, network_args: Dict = None):
+    def __init__(self, dataset_cls: type, network_fn: Callable, dataset_args: Dict = None, network_args: Dict = None, train_args: Dict = None):
         self.name = f'{self.__class__.__name__}_{dataset_cls.__name__}_{network_fn.__name__}'
 
         if dataset_args is None:
@@ -19,6 +19,8 @@ class Model:
             network_args = {}
         self.network = network_fn(self.data.input_shape, self.data.output_shape, **network_args)
         self.network.summary()
+
+        self.learning_rate = train_args['learning_rate']
 
         self.batch_augment_fn: Optional[Callable] = None
         self.batch_format_fn: Optional[Callable] = None
@@ -46,7 +48,7 @@ class Model:
         return 'mean_squared_error' #'kullback_leibler_divergence'
 
     def optimizer(self):  # pylint: disable=no-self-use
-        return Adam()
+        return Adam(lr=self.learning_rate)
 
     def metrics(self):  # pylint: disable=no-self-use
         return []

@@ -40,11 +40,11 @@ class SourceSeparator:
         """Evaluate on a dataset."""
         return self.model.evaluate(dataset.x_test, dataset.y_test)
 
-if __name__ == "__main__":
-    main()
-
 def main():
     separator = SourceSeparator()
     separator.test_mode = sys.argv[3] and sys.argv[3] == '-t'
     audio = separator.separate(sys.argv[1])
     sf.write(sys.argv[2], audio, separator.samplerate)
+
+if __name__ == "__main__":
+    main()

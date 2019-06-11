@@ -17,7 +17,8 @@ from training.util import train_model
 
 DEFAULT_TRAIN_ARGS = {
     'batch_size': 100,
-    'epochs': 16
+    'epochs': 16,
+    'learning_rate': 0.0001
 }
 
 
@@ -72,11 +73,13 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
     networks_module = importlib.import_module('mss.networks')
     network_fn_ = getattr(networks_module, experiment_config['network'])
     network_args = experiment_config.get('network_args', {})
+    train_args = experiment_config['train_args']
     model = model_class_(
         dataset_cls=dataset_class_,
         network_fn=network_fn_,
         dataset_args=dataset_args,
-        network_args=network_args
+        network_args=network_args,
+        train_args=train_args
     )
     print(model)
 

@@ -14,9 +14,10 @@ class MSSModel(Model):
                  dataset_cls: type = MUSDBDataset,
                  network_fn: Callable = dnn,
                  dataset_args: Dict = None,
-                 network_args: Dict = None):
+                 network_args: Dict = None,
+                 train_args: Dict = None):
         """Define the default dataset and network values for this model."""
-        super().__init__(dataset_cls, network_fn, dataset_args, network_args)
+        super().__init__(dataset_cls, network_fn, dataset_args, network_args, train_args)
 
     def separate_audio(self, audio):
         x = stft(to_channel_tensor(audio, 0))
