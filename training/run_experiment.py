@@ -21,6 +21,10 @@ DEFAULT_TRAIN_ARGS = {
     'learning_rate': 0.0001
 }
 
+DEFAULT_DATASET_ARGS = {
+    'num_leading_ctx_frames': 0,
+    'num_trailing_ctx_frames': 0
+}
 
 def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, use_wandb: bool = True):
     """
@@ -60,7 +64,7 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
 
     datasets_module = importlib.import_module('mss.datasets')
     dataset_class_ = getattr(datasets_module, experiment_config['dataset'])
-    dataset_args = experiment_config.get('dataset_args', {})
+    dataset_args = {**DEFAULT_DATASET_ARGS, **experiment_config.get('dataset_args', {})}
     if 'batch_size' not in dataset_args:
         dataset_args['batch_size'] = experiment_config['train_args']['batch_size']
     dataset = dataset_class_(**dataset_args)

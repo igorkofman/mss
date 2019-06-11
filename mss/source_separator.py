@@ -14,7 +14,8 @@ import tensorflow as tf
 class SourceSeparator:
     """Given an audio file, separates it"""
     def __init__(self):
-        self.model = MSSModel()
+        dataset_args = dict(num_leading_ctx_frames: 1, num_trailing_ctx_frames: 1, batch_size: 256)
+        self.model = MSSModel(dataset_args=dataset_args)
         self.model.load_weights()
         self.samplerate = None
         self.test_mode = False

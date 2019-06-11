@@ -14,6 +14,23 @@ FRAME_STEP = 512
 FFT_LENGTH = 1024
 NUM_FFT_BINS = int(FRAME_LENGTH/2) + 1
 
+# pads a tensor of fft'd audio samples with the appopriate number of
+# leading and trailing frames of silence
+def pad(tensor, num_leading_ctx_frames, num_trailing_ctx_frames):
+    paddings = tf.constant([[num_leading_ctx_frames, num_trailing_ctx_frames], [0, 0]])
+    return tf.pad(tensor, paddings, 'CONSTANT')
+
+# given a tensor of padded fft'd audio data returns a tensor of frames with leading and trailing context
+# padded_data must be valid at [first_frame-num_leading_ctx_frames]  and at [first_frame+num_frames+num_trailing_ctx_frames-1]
+def built_contextual_frames(padded_data, batch_start, batch_end, num_leading_ctx_frames, num_trailing_ctx_frames):
+    out = []
+    for i in range(batch_start, batch_end):
+        row = padded_data[i - num_leading_ctx_frames : i + num_trailing_ctx_frames + 1, :]
+        new_frame_width = num_leading_ctx_frames + num_trailing_ctx_frames+1
+        row = tf.reshape(row, [1, NUM_FFT_BINS * 2 * new_frame_width])
+        out.append(row)
+    return tf.concat(out, axis=0)
+
 def to_channel_tensor(data, channel):
     # convert to float32 because that's what the stft wants
     # data is (timestamp, channel)

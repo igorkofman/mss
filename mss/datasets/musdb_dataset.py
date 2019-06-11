@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.python.keras.utils.data_utils import Sequence
 
 from mss.datasets.dataset import _download_raw_dataset, Dataset, _parse_args
-from mss.util import to_channel_tensor, stft
+from mss.util import to_channel_tensor, stft, pad, built_contextual_frames
 
 class MUSDBDataset(Dataset, Sequence):
     """
@@ -39,14 +39,12 @@ class MUSDBDataset(Dataset, Sequence):
         batch_end = min((iter_index + 1) * self.batch_size, 
                 self.num_samples - self.num_trailing_ctx_frames) + \
                 self.num_leading_ctx_frames
+        x_with_context = built_contextual_frames(pad(self.x_train, self.num_leading_ctx_frames, self.num_trailing_ctx_frames), 
+                                                 batch_start, batch_end,
+                                                 self.num_leading_ctx_frames,
+                                                 self.num_trailing_ctx_frames)
         y_batch = self.y_train[batch_start:batch_end]
 
-        out = []
-        for i in range(batch_start, batch_end):
-            row = self.x_train[i:i+self.frame_len_with_context, :]
-            row = tf.reshape(row, [1, self.num_fft_bins * 2 * self.frame_len_with_context])
-            out.append(row)
-        x_with_context = tf.concat(out, axis=0)
         return (x_with_context, y_batch)
 
     def _ensure_dataset_exists_locally(self):
@@ -76,14 +74,10 @@ class MUSDBDataset(Dataset, Sequence):
         test_raw_x = to_channel_tensor(test_tracks[0].audio, 0)
         test_raw_y = to_channel_tensor(test_tracks[0].stems[0], 0)
 
-        paddings = tf.constant([[self.num_leading_ctx_frames, self.num_trailing_ctx_frames,], [0, 0]])
-        def _pad(t):
-            return tf.pad(t, paddings, 'CONSTANT')
-                
-        self.x_train = _pad(stft(train_raw_x))
-        self.y_train = _pad(stft(train_raw_y))
-        self.x_test = _pad(stft(test_raw_x))
-        self.y_test = _pad(stft(test_raw_y))
+        self.x_train = stft(train_raw_x)
+        self.y_train = stft(train_raw_y)
+        self.x_test = stft(test_raw_x)
+        self.y_test = stft(test_raw_y)
         self.num_samples = int(self.x_train.shape[0])
 
     def __repr__(self):
@@ -92,7 +86,7 @@ class MUSDBDataset(Dataset, Sequence):
 def main():
     """Load MUSDB dataset and print info."""
     args = _parse_args()
-    dataset = MUSDBDataset(subsample_fraction=args.subsample_fraction)
+    dataset = MUSDBDataset()
     dataset.load_or_generate_data()
 
     print(dataset)
