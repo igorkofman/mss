@@ -27,7 +27,7 @@ class MSSModel(Model):
         batch_start = self.num_leading_ctx_frames
         batch_end = padded_length-self.num_leading_ctx_frames-self.num_trailing_ctx_frames
         frames_with_context = built_contextual_frames(frames, batch_start, batch_end,
-            self.num_leading_ctx_frames, self.num_trailing_ctx_frames)
+                                                      self.num_leading_ctx_frames, self.num_trailing_ctx_frames)
         pred_raw = self.network.predict(frames_with_context, steps=1)
         separated_audio = istft(pred_raw)
         return separated_audio
