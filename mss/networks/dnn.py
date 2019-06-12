@@ -7,7 +7,7 @@ def dnn(input_shape: Tuple[int, ...],
         output_shape: Tuple[int, ...],
         layer_size: int = 2048,
         dropout_amount: float = 0.2,
-        num_layers: int = 3) -> Model:
+        num_layers: int = 4) -> Model:
 
     model = Sequential()
     model.add(Dense(layer_size, input_shape=input_shape, activation='relu'))
