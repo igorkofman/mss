@@ -5,7 +5,7 @@ from tensorflow.keras.layers import Dense
 
 def dnn(input_shape: Tuple[int, ...],
         output_shape: Tuple[int, ...],
-        layer_size: int = 1024,
+        layer_size: int = 2048,
         dropout_amount: float = 0.2,
         num_layers: int = 3) -> Model:
 

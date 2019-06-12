@@ -31,15 +31,13 @@ class Model:
         DIRNAME.mkdir(parents=True, exist_ok=True)
         return str(DIRNAME / f'{self.name}_weights.h5')
 
-    def fit(self, dataset, batch_size: int = 100, epochs: int = 16, augment_val: bool = True,
-            callbacks: list = None):
+    def fit(self, dataset, batch_size: int = 100, epochs: int = 16, callbacks: list = None):
         if callbacks is None:
             callbacks = []
 
         self.network.compile(loss=self.loss(), optimizer=self.optimizer(), metrics=self.metrics())
-        #self.network.fit(dataset.x_train, dataset.y_train, steps_per_epoch=100, epochs=epochs, verbose=1)
         self.network.fit_generator(dataset, steps_per_epoch=dataset.num_samples/batch_size,
-                                    epochs=epochs, verbose=1)
+                                   epochs=epochs, verbose=1)
 
     def evaluate(self, x, y, steps=100, verbose=False):  # pylint: disable=unused-argument
         pass

@@ -13,8 +13,8 @@ import tensorflow as tf
 
 class SourceSeparator:
     """Given an audio file, separates it"""
-    def __init__(self):
-        dataset_args = dict(num_leading_ctx_frames=1, num_trailing_ctx_frames=1, batch_size=256)
+    def __init__(self, num_leading_ctx_frames, num_trailing_ctx_frames):
+        dataset_args = dict(num_leading_ctx_frames=num_leading_ctx_frames, num_trailing_ctx_frames=num_trailing_ctx_frames, batch_size=256)
         self.model = MSSModel(dataset_args=dataset_args)
         self.model.load_weights()
         self.samplerate = None
@@ -42,7 +42,7 @@ class SourceSeparator:
         return self.model.evaluate(dataset.x_test, dataset.y_test)
 
 def main():
-    separator = SourceSeparator()
+    separator = SourceSeparator(1, 1)
     separator.test_mode = sys.argv[3] and sys.argv[3] == '-t'
     audio = separator.separate(sys.argv[1])
     sf.write(sys.argv[2], audio, separator.samplerate)

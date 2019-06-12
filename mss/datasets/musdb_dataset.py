@@ -35,16 +35,15 @@ class MUSDBDataset(Dataset, Sequence):
 
     def __getitem__(self, iter_index):
         # todo: vectorize
+        padded_data = pad(self.x_train, self.num_leading_ctx_frames, self.num_trailing_ctx_frames)
         batch_start = iter_index * self.batch_size + self.num_leading_ctx_frames
-        batch_end = min((iter_index + 1) * self.batch_size, 
-                self.num_samples - self.num_trailing_ctx_frames) + \
-                self.num_leading_ctx_frames
-        x_with_context = built_contextual_frames(pad(self.x_train, self.num_leading_ctx_frames, self.num_trailing_ctx_frames), 
+        batch_end = min((iter_index + 1) * self.batch_size, self.num_samples) + \
+                        self.num_leading_ctx_frames
+        x_with_context = built_contextual_frames(padded_data,
                                                  batch_start, batch_end,
                                                  self.num_leading_ctx_frames,
                                                  self.num_trailing_ctx_frames)
         y_batch = self.y_train[batch_start:batch_end]
-
         return (x_with_context, y_batch)
 
     def _ensure_dataset_exists_locally(self):
