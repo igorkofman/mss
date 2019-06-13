@@ -20,7 +20,6 @@ GPU_UTIL_SAMPLER = False
 
 def train_model(
         model: Model,
-        dataset: Dataset,
         epochs: int,
         batch_size: int,
         gpu_ind: Optional[int] = None,
@@ -46,7 +45,7 @@ def train_model(
     model.network.summary()
 
     t = time()
-    _history = model.fit(dataset=dataset, batch_size=batch_size, epochs=epochs, callbacks=callbacks)
+    _history = model.fit(batch_size=batch_size, epochs=epochs, callbacks=callbacks)
     print('Training took {:2f} s'.format(time() - t))
 
     if GPU_UTIL_SAMPLER and gpu_ind is not None:

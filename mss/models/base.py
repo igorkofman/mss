@@ -13,11 +13,12 @@ class Model:
 
         if dataset_args is None:
             dataset_args = {}
-        self.data = dataset_cls(**dataset_args)
+        self.dataset = dataset_cls(**dataset_args)
+        self.dataset.load_or_generate_data()
 
         if network_args is None:
             network_args = {}
-        self.network = network_fn(self.data.input_shape, self.data.output_shape, **network_args)
+        self.network = network_fn(self.dataset.input_shape, self.dataset.output_shape, **network_args)
         self.network.summary()
 
         if train_args is not None:
@@ -31,20 +32,20 @@ class Model:
         DIRNAME.mkdir(parents=True, exist_ok=True)
         return str(DIRNAME / f'{self.name}_weights.h5')
 
-    def fit(self, dataset, batch_size: int = 100, epochs: int = 16, callbacks: list = None):
+    def fit(self, batch_size: int = 100, epochs: int = 16, callbacks: list = None):
         if callbacks is None:
             callbacks = []
 
         self.network.compile(loss=self.loss(), optimizer=self.optimizer(), metrics=self.metrics())
-        self.network.fit_generator(dataset, steps_per_epoch=dataset.num_samples/batch_size,
-                                   epochs=epochs, verbose=1)
+        self.dataset.batch_size = batch_size
+        self.network.fit_generator(self.dataset, epochs=epochs, shuffle=False, verbose=1)
 
-    def evaluate(self, x, y, steps=100, verbose=False):  # pylint: disable=unused-argument
+    def evaluate(self):  # pylint: disable=unused-argument
         pass
 #        return self.network.evaluate_generator(dataset, steps=10)
         
     def loss(self):  # pylint: disable=no-self-use
-        return 'mean_squared_error' #'kullback_leibler_divergence'
+        return 'mean_squared_error'
 
     def optimizer(self):  # pylint: disable=no-self-use
         if self.learning_rate:

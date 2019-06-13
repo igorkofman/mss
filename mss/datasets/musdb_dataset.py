@@ -2,9 +2,10 @@
 MUSDB dataset. Downloads from MUSDB website and saves as .npz file if not already present.
 """
 import os
+import random
+import math
 import zipfile
 import musdb
-import tensorflow as tf
 from tensorflow.python.keras.utils.data_utils import Sequence
 
 from mss.datasets.dataset import _download_raw_dataset, Dataset, _parse_args
@@ -14,36 +15,76 @@ class MUSDBDataset(Dataset, Sequence):
     """
     Tunes!
     """
-    def __init__(self, batch_size, num_fft_bins=513, num_leading_ctx_frames=1, num_trailing_ctx_frames=1):
+    def __init__(self, batch_size=32, num_leading_frames=1, num_trailing_frames=1,
+                 frame_length=1024, frame_step=512, target_stem_id=1):
+
         self._ensure_dataset_exists_locally()
         self.database = musdb.DB(self.data_dirname() / 'musdb18')
-        self.x_train = None
-        self.y_train = None
-        self.x_test = None
-        self.y_test = None
+
+        # configuration
         self.batch_size = batch_size
-        self.num_samples = 0
-        self.num_fft_bins = num_fft_bins
-        self.num_leading_ctx_frames = num_leading_ctx_frames
-        self.num_trailing_ctx_frames = num_trailing_ctx_frames
-        self.frame_len_with_context = num_leading_ctx_frames + num_trailing_ctx_frames + 1
-        self.input_shape = (self.num_fft_bins * 2 * self.frame_len_with_context,)
-        self.output_shape = (self.num_fft_bins * 2,)
+        self.num_leading_frames = num_leading_frames
+        self.num_trailing_frames = num_trailing_frames
+        self.frame_length = frame_length
+        self.frame_step = frame_step
+        self.target_stem_id = target_stem_id
+
+        # expose dataset args for network shape
+        num_fft_bins = (self.frame_length // 2) + 1
+        frame_len_with_context = self.num_leading_frames + self.num_trailing_frames + 1
+        self.input_shape = (num_fft_bins * 2 * frame_len_with_context,)
+        self.output_shape = (num_fft_bins * 2,)
+
+        # internal state
+        self.train_tracks = None
+        self.test_tracks = None
+        self.track_idx = None
+        self.current_track = None
+        self.padded_x_stft = None
+        self.padded_y_stft = None
 
     def __len__(self):
-        return int(self.num_samples / self.batch_size)
+        return sum([
+            math.ceil((t.duration * t.rate // self.frame_step) / self.batch_size) 
+            for t in self.train_tracks])
+
+    def on_epoch_end(self):
+        random.shuffle(self.train_tracks)
+        self._set_current_track(0)
+
+    def _set_current_track(self, track_idx):
+        self.track_idx = track_idx
+        self.current_track = self.train_tracks[self.track_idx]
+        print (self.current_track)
+        x_audio = to_channel_tensor(self.current_track.audio, 0)
+        y_audio = to_channel_tensor(self.current_track.stems[self.target_stem_id], 0)
+        print (x_audio)
+        x_stft = stft(x_audio, self.frame_length, self.frame_step)
+        print (x_stft)
+        y_stft = stft(y_audio, self.frame_length, self.frame_step)
+        self.padded_x_stft = pad(x_stft, self.num_leading_frames, self.num_trailing_frames)
+        print (self.padded_x_stft)
+        self.padded_y_stft = pad(y_stft, self.num_leading_frames, self.num_trailing_frames)
 
     def __getitem__(self, iter_index):
         # todo: vectorize
-        padded_data = pad(self.x_train, self.num_leading_ctx_frames, self.num_trailing_ctx_frames)
-        batch_start = iter_index * self.batch_size + self.num_leading_ctx_frames
-        batch_end = min((iter_index + 1) * self.batch_size, self.num_samples) + \
-                        self.num_leading_ctx_frames
-        x_with_context = built_contextual_frames(padded_data,
+
+        # if we're out of data in the current track, advance to the next track
+        samples_in_current_track = self.current_track.duration * self.current_track.rate // self.frame_step
+        if iter_index * self.batch_size >= samples_in_current_track:
+            self._set_current_track(self.track_idx+1)
+
+        # batch_start and batch_end, adjusted for the padding and clipped at end of data
+        batch_start = iter_index * self.batch_size + self.num_leading_frames
+        batch_end = int(min((iter_index + 1) * self.batch_size, samples_in_current_track) + \
+                        self.num_leading_frames)
+
+        x_with_context = built_contextual_frames(self.padded_x_stft,
                                                  batch_start, batch_end,
-                                                 self.num_leading_ctx_frames,
-                                                 self.num_trailing_ctx_frames)
-        y_batch = self.y_train[batch_start:batch_end]
+                                                 self.num_leading_frames,
+                                                 self.num_trailing_frames)
+
+        y_batch = self.padded_y_stft[batch_start:batch_end, :]
         return (x_with_context, y_batch)
 
     def _ensure_dataset_exists_locally(self):
@@ -63,21 +104,13 @@ class MUSDBDataset(Dataset, Sequence):
             os.chdir(curdir)
 
     def load_or_generate_data(self):
-        train_tracks = self.database.load_mus_tracks(subsets=['train'])
-        test_tracks = self.database.load_mus_tracks(subsets=['test'])
+        self.train_tracks = self.database.load_mus_tracks(subsets=['train'])
+        self.test_tracks = self.database.load_mus_tracks(subsets=['test'])
+        self._set_current_track(0)
 
         # grab just the first track for now
-        # later we'll want to computer the length of all tracks and do ffts on the fly
-        train_raw_x = to_channel_tensor(train_tracks[0].audio, 0)
-        train_raw_y = to_channel_tensor(train_tracks[0].stems[0], 0)
-        test_raw_x = to_channel_tensor(test_tracks[0].audio, 0)
-        test_raw_y = to_channel_tensor(test_tracks[0].stems[0], 0)
-
-        self.x_train = stft(train_raw_x)
-        self.y_train = stft(train_raw_y)
-        self.x_test = stft(test_raw_x)
-        self.y_test = stft(test_raw_y)
-        self.num_samples = int(self.x_train.shape[0])
+        # later we'll want to computed the length of all tracks and do ffts on the fly
+        
 
     def __repr__(self):
         return ('MUSDB Dataset\n')

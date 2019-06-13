@@ -9,11 +9,6 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-FRAME_LENGTH = 1024
-FRAME_STEP = 512
-FFT_LENGTH = 1024
-NUM_FFT_BINS = int(FRAME_LENGTH/2) + 1
-
 # pads a tensor of fft'd audio samples with the appopriate number of
 # leading and trailing frames of silence
 def pad(tensor, num_leading_ctx_frames, num_trailing_ctx_frames):
@@ -26,8 +21,8 @@ def built_contextual_frames(padded_data, batch_start, batch_end, num_leading_ctx
     out = []
     for i in range(batch_start, batch_end):
         row = padded_data[i - num_leading_ctx_frames : i + num_trailing_ctx_frames + 1, :]
-        new_frame_width = num_leading_ctx_frames + num_trailing_ctx_frames+1
-        row = tf.reshape(row, [1, NUM_FFT_BINS * 2 * new_frame_width])
+        new_frame_width = num_leading_ctx_frames + num_trailing_ctx_frames + 1
+        row = tf.reshape(row, [1, row.shape[1] * new_frame_width])
         out.append(row)
     return tf.concat(out, axis=0)
 
@@ -36,28 +31,27 @@ def to_channel_tensor(data, channel):
     # data is (timestamp, channel)
     return tf.convert_to_tensor(data.astype(np.float32))[:, channel]
 
-def stft(audio):
-    x = tf.signal.stft(audio,
-                       frame_length=FRAME_LENGTH, 
-                       frame_step=FRAME_STEP,
-                       fft_length=FFT_LENGTH)
+def stft(audio, frame_length, frame_step):
+    x = tf.abs(tf.signal.stft(audio,
+                       frame_length=frame_length,
+                       frame_step=frame_step))
     x_real = tf.math.real(x)
     x_imag = tf.math.imag(x)
     res = tf.concat([x_real, x_imag], axis=1)
     return res
 
-def istft(data):
+def istft(data, frame_length, frame_step):
     sess = tf.Session()
     data = tf.convert_to_tensor(data)
     shape = data.get_shape().as_list()
     data = tf.complex(data[:, :int(shape[1] / 2)], data[:, int (shape[1] / 2):])
     res = tf.signal.inverse_stft(
         stfts=data, 
-        frame_length=FRAME_LENGTH,
-        frame_step=FRAME_STEP,
+        frame_length=frame_length,
+        frame_step=frame_step,
         # forward_window_fn
         window_fn=tf.signal.inverse_stft_window_fn(
-            frame_step=FRAME_STEP,
+            frame_step=frame_step,
             forward_window_fn=functools.partial(tf.signal.hann_window, periodic=True)
         )
     )

@@ -1,5 +1,6 @@
 """CharacterPredictor class"""
 from typing import Tuple, Union
+import argparse
 
 import numpy as np
 
@@ -36,6 +37,13 @@ class SourceSeparator:
             return self.model.separate_audio_noop(audio)
         else:
             return self.model.separate_audio(audio)
+
+    #stem_ids:
+    #    mixture: 0
+    #    drums: 1
+    #    bass: 2
+    #    other: 3
+    #    vocals: 4
 
     def evaluate(self, dataset):
         """Evaluate on a dataset."""

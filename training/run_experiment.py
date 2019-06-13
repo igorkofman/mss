@@ -21,9 +21,14 @@ DEFAULT_TRAIN_ARGS = {
     'learning_rate': 0.0001
 }
 
+DEFAULT_MODEL_ARGS = {
+    'num_leading_frames': 0,
+    'num_trailing_frames': 0,
+    'frame_length': 1024,
+    'frame_step': 512
+}
+
 DEFAULT_DATASET_ARGS = {
-    'num_leading_ctx_frames': 0,
-    'num_trailing_ctx_frames': 0
 }
 
 def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, use_wandb: bool = True):
@@ -60,32 +65,29 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
     """
     print(f'Running experiment with config {experiment_config} on GPU {gpu_ind}')
     tf.enable_eager_execution()
-    experiment_config['train_args'] = {**DEFAULT_TRAIN_ARGS, **experiment_config.get('train_args', {})}
 
     datasets_module = importlib.import_module('mss.datasets')
     dataset_class_ = getattr(datasets_module, experiment_config['dataset'])
     dataset_args = {**DEFAULT_DATASET_ARGS, **experiment_config.get('dataset_args', {})}
-    if 'batch_size' not in dataset_args:
-        dataset_args['batch_size'] = experiment_config['train_args']['batch_size']
-    dataset = dataset_class_(**dataset_args)
-    dataset.load_or_generate_data()
-    print(dataset)
 
     models_module = importlib.import_module('mss.models')
     model_class_ = getattr(models_module, experiment_config['model'])
+    model_args = {**DEFAULT_MODEL_ARGS, **experiment_config.get('model_args', {})}
 
     networks_module = importlib.import_module('mss.networks')
     network_fn_ = getattr(networks_module, experiment_config['network'])
     network_args = experiment_config.get('network_args', {})
-    train_args = experiment_config['train_args']
+
+    train_args = {**DEFAULT_TRAIN_ARGS, **experiment_config.get('train_args', {})}
+
     model = model_class_(
         dataset_cls=dataset_class_,
         network_fn=network_fn_,
         dataset_args=dataset_args,
         network_args=network_args,
-        train_args=train_args
+        train_args=train_args,
+        model_args=model_args
     )
-    print(model)
 
     experiment_config['experiment_group'] = experiment_config.get('experiment_group', None)
     experiment_config['gpu_ind'] = gpu_ind
@@ -98,9 +100,8 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
 
     train_model(
         model,
-        dataset,
-        epochs=experiment_config['train_args']['epochs'],
-        batch_size=experiment_config['train_args']['batch_size'],
+        epochs=train_args['epochs'],
+        batch_size=train_args['batch_size'],
         gpu_ind=gpu_ind,
         use_wandb=use_wandb
     )
@@ -108,7 +109,7 @@ def run_experiment(experiment_config: Dict, save_weights: bool, gpu_ind: int, us
     if save_weights:
         model.save_weights()
 
-    score = model.evaluate(dataset.x_test, dataset.y_test)
+    score = model.evaluate()
     print(f'Test evaluation: {score}')
 
     # Hide lines below until Lab 4
