@@ -15,7 +15,7 @@ class MUSDBDataset(Dataset, Sequence):
     """
     Tunes!
     """
-    def __init__(self, batch_size=32, num_leading_frames=1, num_trailing_frames=1,
+    def __init__(self, batch_size, num_leading_frames, num_trailing_frames,
                  frame_length=1024, frame_step=512, target_stem_id=1):
 
         # download the db if needed
@@ -60,6 +60,7 @@ class MUSDBDataset(Dataset, Sequence):
         return int((track.duration * track.rate) // self.frame_step)
 
     def _set_current_track(self, track_idx):
+        print (track_idx)
         self.track_idx = track_idx
         self.current_track = self.train_tracks[self.track_idx]
         self.track_batch_idx = 0
