@@ -1,6 +1,7 @@
 """
 MUSDB dataset. Downloads from MUSDB website and saves as .npz file if not already present.
 """
+import math
 import os
 import random
 import math
@@ -47,7 +48,7 @@ class MUSDBDataset(Dataset, Sequence):
 
     def _batches_in_track(self, track):
         # drop any batches that aren't full (Math.ceil instead to include them)
-        return Math.ceil(self._frames_in_track(track) / self.batch_size)
+        return math.ceil(self._frames_in_track(track) / self.batch_size)
 
     def __len__(self):        
         return sum([self._batches_in_track(t) for t in self.train_tracks])
