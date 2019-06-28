@@ -47,7 +47,7 @@ class MUSDBDataset(Dataset, Sequence):
 
     def _batches_in_track(self, track):
         # drop any batches that aren't full (Math.ceil instead to include them)
-        return int(self._frames_in_track(track) // self.batch_size)
+        return Math.ceil(self._frames_in_track(track) / self.batch_size)
 
     def __len__(self):        
         return sum([self._batches_in_track(t) for t in self.train_tracks])
@@ -60,7 +60,6 @@ class MUSDBDataset(Dataset, Sequence):
         return int((track.duration * track.rate) // self.frame_step)
 
     def _set_current_track(self, track_idx):
-        print (track_idx)
         self.track_idx = track_idx
         self.current_track = self.train_tracks[self.track_idx]
         self.track_batch_idx = 0
@@ -82,9 +81,7 @@ class MUSDBDataset(Dataset, Sequence):
         # batch_start and batch_end, adjusted for the padding and clipped at end of data
         batch_start = self.track_batch_idx * self.batch_size + self.num_leading_frames
         batch_end = (self.track_batch_idx + 1) * self.batch_size + self.num_leading_frames
-
-#        batch_end = int(min((self.track_batch_idx + 1) * self.batch_size, samples_in_current_track) + \
-#                        self.num_leading_frames)
+        batch_end = min(batch_end,  self._frames_in_track(self.current_track) + self.num_leading_frames)
 
         x_with_context = built_contextual_frames(self.padded_x_stft,
                                                  batch_start, batch_end,
